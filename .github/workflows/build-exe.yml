@@ -30,13 +30,8 @@ jobs:
       - name: Generate Prisma client
         run: bunx prisma generate
 
-      - name: Build Next.js (standalone)
+      - name: Build Next.js (standalone + assemble server-dist)
         run: bun run build
-
-      - name: Assemble bundled server
-        run: |
-          rm -rf server-dist
-          cp -r .next/standalone server-dist
 
       - name: Install desktop dependencies
         working-directory: desktop
