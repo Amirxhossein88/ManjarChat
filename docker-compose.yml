@@ -1,0 +1,18 @@
+services:
+  manjarchat:
+    build: .
+    container_name: manjarchat
+    ports:
+      - "3000:3000"
+    environment:
+      # حساب ادمین (در اولین اجرا ساخته می‌شود)
+      - ADMIN_USERNAME=manjar1388
+      - ADMIN_PASSWORD=13881388
+      # هدیه خوش‌آمدگویی کاربر جدید (منجر)
+      - WELCOME_BONUS=100
+      # موجودی اولیه ادمین
+      - ADMIN_BALANCE=1000000
+    volumes:
+      - ./db:/app/db
+      - ./data:/app/data
+    restart: unless-stopped

@@ -1,0 +1,51 @@
+{
+  "name": "manjarchat-desktop",
+  "productName": "ManjarChat",
+  "version": "1.0.0",
+  "description": "منجرچت — مسنجر دسکتاپ با اقتصاد منجر (ManjarChat Desktop)",
+  "author": "Manjar88 <manjar1388@users.noreply.github.com>",
+  "license": "MIT",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --x64"
+  },
+  "build": {
+    "appId": "ir.manjar.chat",
+    "productName": "ManjarChat",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../server-dist",
+        "to": "server"
+      }
+    ],
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "ManjarChat"
+    },
+    "portable": {
+      "artifactName": "ManjarChat-Portable-${version}.exe"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  }
+}

@@ -1,0 +1,14 @@
+node_modules
+.next
+db
+data
+server-dist
+desktop/dist
+desktop/node_modules
+.git
+.env
+dev.log
+server.log
+tests
+*.md
+!README.md

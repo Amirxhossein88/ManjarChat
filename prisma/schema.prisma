@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────── Users & Sessions ───────────────────────────
+
+model User {
+  id             String    @id @default(cuid())
+  username       String    @unique
+  displayName    String
+  passwordHash   String
+  role           String    @default("USER") // USER | ADMIN
+  bio            String    @default("")
+  avatarColor    String    @default("#0d9488")
+  manjarBalance  Int       @default(0)
+  isPremiumUntil DateTime?
+  banned         Boolean   @default(false)
+  lastSeenAt     DateTime  @default(now())
+  lastCheckinAt  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  sessions      Session[]
+  messages      Message[]
+  participants  Participant[]
+  reactions     Reaction[]
+  transactions  Transaction[]
+  ownedRooms    Conversation[] @relation("OwnedConversations")
+  media         Media[]
+  purchasesBought   Purchase[] @relation("PurchasesBought")
+  purchasesReceived Purchase[] @relation("PurchasesReceived")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────── Chats ───────────────────────────
+
+model Conversation {
+  id          String   @id @default(cuid())
+  type        String // DM | GROUP | CHANNEL
+  title       String   @default("")
+  about       String   @default("")
+  avatarColor String   @default("#0d9488")
+  ownerId     String
+  boostCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  owner        User          @relation("OwnedConversations", fields: [ownerId], references: [id])
+  participants Participant[]
+  messages     Message[]
+}
+
+model Participant {
+  id             String    @id @default(cuid())
+  conversationId String
+  userId         String
+  role           String    @default("MEMBER") // OWNER | ADMIN | MEMBER
+  lastReadAt     DateTime  @default(now())
+  typingAt       DateTime?
+  createdAt      DateTime  @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String?
+  kind           String   @default("TEXT") // TEXT | VOICE | IMAGE | FILE | SYSTEM | GIFT
+  content        String   @default("")
+  mediaId        String?
+  durationMs     Int?
+  giftEmoji      String?
+  pinned         Boolean  @default(false)
+  deleted        Boolean  @default(false)
+  deletedAt      DateTime?
+  replyToId      String?
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User?        @relation(fields: [senderId], references: [id])
+  reactions    Reaction[]
+  parent       Message?     @relation("ReplyTo", fields: [replyToId], references: [id])
+  replies      Message[]    @relation("ReplyTo")
+
+  @@index([conversationId, createdAt])
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+}
+
+// ─────────────────────────── Media ───────────────────────────
+
+model Media {
+  id         String   @id @default(cuid())
+  filename   String
+  mime       String
+  size       Int
+  path       String
+  uploaderId String?
+  createdAt  DateTime @default(now())
+
+  uploader User? @relation(fields: [uploaderId], references: [id])
+}
+
+// ─────────────────────────── Manjar Economy ───────────────────────────
+
+model ShopItem {
+  id          String  @id @default(cuid())
+  key         String  @unique
+  name        String
+  emoji       String
+  price       Int
+  kind        String // PREMIUM | GIFT | BOOST | COSMETIC
+  description String  @default("")
+  active      Boolean @default(true)
+  sortOrder   Int     @default(0)
+}
+
+model Transaction {
+  id           String   @id @default(cuid())
+  userId       String
+  amount       Int // + earns / - spends
+  kind         String // WELCOME | CHECKIN | PURCHASE | GIFT_SENT | GIFT_RECEIVED | ADMIN_MINT | ADMIN_DEDUCT | BOOST | REFUND
+  note         String   @default("")
+  balanceAfter Int
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Purchase {
+  id          String   @id @default(cuid())
+  buyerId     String
+  recipientId String?
+  itemKey     String
+  itemName    String
+  itemEmoji   String   @default("🎁")
+  price       Int
+  createdAt   DateTime @default(now())
+
+  buyer     User  @relation("PurchasesBought", fields: [buyerId], references: [id])
+  recipient User? @relation("PurchasesReceived", fields: [recipientId], references: [id])
+}
+
+model Settings {
+  key   String @id
+  value String
+}
