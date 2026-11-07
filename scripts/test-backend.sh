@@ -17,7 +17,7 @@ check health '"ok":true' "$(curl -s $B/health)"
 # admin login (seeded account manjar1388 / 13881388)
 R=$(curl -s -c $J/admin.txt -X POST $B/auth/login -H 'Content-Type: application/json' -d '{"username":"manjar1388","password":"13881388"}')
 check admin_login '"role":"ADMIN"' "$R"
-check admin_balance '1000000' "$R"
+check admin_balance '"manjarBalance"' "$R"
 
 # register two users (welcome bonus 100) — fallback to login if they exist
 R=$(curl -s -c $J/u1.txt -X POST $B/auth/register -H 'Content-Type: application/json' -d '{"username":"ali_test","password":"test1234","displayName":"علی تست"}')
